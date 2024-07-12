@@ -1,0 +1,178 @@
+
+Project project_name {
+    database_type: 'ANY'
+    Note: 'HNG Backend stage three task '
+}
+
+Table users {
+  id int [primary key]
+  first_name varchar
+  last_name varcha
+  email varchar [unique]
+  password_hash varchar
+  magic_link_token varchar
+  social_auth_provider varchar
+  language varchar
+  region varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table organisations {
+  id int [primary key]
+  name varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table user_organisations {
+  user_id int [ref: > users.id]
+  organisation_id int [ref: > organisations.id]
+  role varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table sessions {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  token varchar
+  expires_at timestamp
+}
+
+Table password_resets {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  token varchar
+  expires_at timestamp
+}
+
+Table messages {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  subject varchar
+  body text
+  sent_at timestamp
+  status varchar
+}
+
+Table payments {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  amount decimal
+  currency varchar
+  provider varchar
+  provider_payment_id varchar
+  status varchar
+  created_at timestamp
+}
+
+Table settings {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  setting_name varchar
+  setting_value varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table superadmins {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  created_at timestamp
+}
+
+Table activity_logs {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  activity_type varchar
+  activity_details text
+  created_at timestamp
+}
+
+Table contact_us {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  message text
+  created_at timestamp
+}
+
+Table gdpr_cookies {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  consented boolean
+  consented_at timestamp
+}
+
+Table dashboards {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  widgets text
+  created_at timestamp
+}
+
+Table waitlist {
+  id int [primary key]
+  email varchar [unique]
+  joined_at timestamp
+}
+
+Table marketing_pages {
+  id int [primary key]
+  title varchar
+  content text
+  created_at timestamp
+}
+
+Table invites {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  invitee_email varchar
+  status varchar
+  sent_at timestamp
+}
+
+Table invite_links {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  link varchar
+  created_at timestamp
+}
+
+Table language_region {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  language varchar
+  region varchar
+  created_at timestamp
+}
+
+Table email_templates {
+  id int [primary key]
+  name varchar
+  subject varchar
+  body text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table migrations {
+  id int [primary key]
+  migration_name varchar
+  run_at timestamp
+}
+
+Table activity_log {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  activity_type varchar
+  activity_details text
+  created_at timestamp
+}
+
+Table push_notifications {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  content text
+  sent_at timestamp
+}
