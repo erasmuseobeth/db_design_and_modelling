@@ -1,0 +1,41 @@
+Database normalization is the process of organizing data in a database to reduce redundancy and dependency by
+organizing fields and table of a database to reduce redundancy and dependency by organizing fields and tables
+of a database to reduce redundancy
+
+
+There are generally five normal forms (1NF, 2NF, 3NF, 4NF, and 5NF) in database normalization theory.
+Each normal form represents a different level of organization and dependency among the attributes (columns) 
+in a relational database table. Here’s a brief overview of each:
+
+1. **First Normal Form (1NF)**:
+   - Eliminates repeating groups within a table by ensuring that each column contains atomic (indivisible) values.
+   - Ensures that there are no repeating groups or arrays within cells.
+
+2. **Second Normal Form (2NF)**:
+   - Requires that a table is in 1NF and all non-key attributes are fully functional dependent on the primary key.
+   - Eliminates partial dependencies, where an attribute depends on only part of the primary key.
+
+3. **Third Normal Form (3NF)**:
+   - Requires that a table is in 2NF and all non-key attributes are non-transitively dependent on the primary key.
+   - Eliminates transitive dependencies, where an attribute depends on another non-key attribute.
+
+4. **Boyce-Codd Normal Form (BCNF)**:
+   - A stricter version of 3NF, specifically for tables with multiple candidate keys.
+   - Ensures that all determinants are candidate keys.
+
+5. **Fourth Normal Form (4NF)**:
+   - Addresses multi-valued dependencies where a table contains more than one independent multi-valued attribute.
+   - Ensures that a table is in BCNF and has no multi-valued dependencies.
+
+6. **Fifth Normal Form (5NF)**:
+   - Addresses cases where a table has a join dependency.
+   - Ensures that a table is in 4NF and all join dependencies are removed.
+
+These normal forms progressively reduce data redundancy and anomalies, ensuring data integrity and efficient database design.
+Each higher normal form builds upon the requirements of the previous ones, with the goal of minimizing redundancy and ensuring
+data can be manipulated and queried efficiently without unexpected behaviors.
+
+
+
+
+A squeeze page is a web page made for capturing potential customers’ email addresses. It’s a common practice for these pages to offer free ebooks, educational emails, videos, and more, in exchange for a visitor’s email address or other data. At first sight, squeeze pages resemble landing pages, but they’re slightly different.
