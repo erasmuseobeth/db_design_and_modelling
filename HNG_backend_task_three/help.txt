@@ -1,0 +1,137 @@
+This database design is made robust and comprehensive for handling various functionalities within application. However, a few considerations and potential improvements might enhance its robustness further. Here are some points to review:
+
+### 1. **Indexing**
+
+Ensure that you have appropriate indexes on columns frequently used in queries, especially for foreign keys and columns used in `WHERE` clauses. This improves query performance.
+
+### 2. **Data Integrity**
+
+- **Constraints**: Ensure that all necessary constraints (e.g., `NOT NULL`, `UNIQUE`) are applied to maintain data integrity.
+- **Enum Usage**: You’re using enums, which is good for ensuring data consistency for certain fields like user roles and statuses.
+
+### 3. **Normalization**
+
+Design follows normalization principles well, separating data into related tables and using join tables for many-to-many relationships. This helps avoid data redundancy.
+
+### 4. **Scalability**
+
+Consider the potential growth of application. Current design should scale well, but monitor and adjust indexes, queries, and potentially denormalize some tables if performance issues arise at scale.
+
+### 5. **Audit and Logging**
+
+Consider adding audit tables or logging mechanisms to track changes over time, especially for critical tables like `users`, `roles`, and `payments`. This helps in maintaining a history of changes for auditing purposes.
+
+### 6. **Security**
+
+- **Sensitive Data**: Ensure sensitive data like passwords are hashed and not stored in plain text.
+- **Access Control**: Implement role-based access control (RBAC) appropriately to manage user permissions effectively.
+
+### 7. **Backup and Recovery**
+
+Ensure you have a robust backup and recovery strategy in place to prevent data loss.
+
+### 8. **Potential Enhancements**
+
+- **Soft Deletes**: Consider adding a `deleted_at` timestamp to tables to implement soft deletes, allowing you to "delete" records without physically removing them from the database.
+- **Composite Keys**: For join tables, ensure you’re using composite primary keys or unique constraints to prevent duplicate entries.
+
+### Table Group Organization
+
+To keep your schema organized and maintainable, you can group related tables together using `TableGroup` in dbdiagram.io. Here's how you can organize your tables:
+
+```plaintext
+TableGroup Users {
+    users
+    sessions
+    password_resets
+    user_roles
+    user_data
+}
+
+TableGroup Organisations {
+    organisations
+    organisation_users
+}
+
+TableGroup Emails {
+    emails
+    email_templates
+}
+
+TableGroup Payments {
+    payments
+}
+
+TableGroup Invitations {
+    invites
+    waitlist
+}
+
+TableGroup Notifications {
+    notifications
+    push_notifications
+}
+
+TableGroup Content {
+    blogs
+    charts
+    ai_integrations
+    recommendations
+    widgets
+}
+
+TableGroup Logs {
+    activity_logs
+}
+
+TableGroup Migrations {
+    migrations
+}
+```
+
+### Visual Arrangement
+
+Visually, you might arrange the tables as follows for better clarity and intuitive understanding:
+
+1. **Core Entities**: Place `users` and `organisations` at the center as they are central to your application.
+2. **Join Tables**: Place `user_roles` and `organisation_users` close to their respective core entities.
+3. **Auxiliary Tables**: Group related auxiliary tables around the core entities (e.g., `sessions` and `password_resets` near `users`).
+4. **Activity and Logs**: Place tables related to activities and logs (e.g., `activity_logs`) together, perhaps at the bottom or a corner.
+5. **Payments and Transactions**: Group payment-related tables together for clarity.
+
+Here's a suggested visual arrangement:
+
+```plaintext
+Core Entities
+|-------------|-------------|
+|   users     | organisations|
+|-------------|-------------|
+
+Join Tables
+|-------------------------|
+| user_roles | org_users  |
+|-------------------------|
+
+Auxiliary Tables
+|------------|------------|------------|------------|
+| sessions   | pass_resets| emails     | payments   |
+|------------|------------|------------|------------|
+| email_tmpl | waitlist   | invites    | widgets    |
+|------------|------------|------------|------------|
+
+Notifications and Content
+|------------|------------|------------|------------|
+| notifications|push_notif|blogs       | charts     |
+|------------|------------|------------|------------|
+|ai_integrations|recommnd |            |            |
+|------------|------------|------------|------------|
+
+Logs and Migrations
+|------------|------------|
+| activity_logs | migrations |
+|------------|------------|
+```
+
+### Summary
+
+current database design is quite robust and covers a wide range of functionalities. By implementing these suggestions, you can ensure better performance, maintainability, and scalability of your database schema. Regularly reviewing and optimizing the design as application grows will help maintain its robustness over time.
