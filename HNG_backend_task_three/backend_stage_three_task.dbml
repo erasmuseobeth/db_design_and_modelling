@@ -1,0 +1,378 @@
+// Project Definition
+Project BackendTemplate {
+    Note: '''
+      Database schema design for HNG Backend Task using Instructions Boilerplate Template
+      link to template: https://github.com/hngprojects/hng_boilerplate_instructions
+      preferably postgress implementation
+      
+Core Entities
+|-------------|-------------|
+|   users     | organisations|
+|-------------|-------------|
+
+Join Tables
+|-------------------------|
+| user_roles | org_users  |
+|-------------------------|
+
+Auxiliary Tables
+|------------|------------|------------|------------|
+| sessions   | pass_resets| emails     | payments   |
+|------------|------------|------------|------------|
+| email_tmpl | waitlist   | invites    | widgets    |
+|------------|------------|------------|------------|
+
+Notifications and Content
+|------------|------------|------------|------------|
+| notifications|push_notif|blogs       | charts     |
+|------------|------------|------------|------------|
+|ai_integrations|recomendations |            |            |
+|------------|------------|------------|------------|
+
+Logs and Migrations
+|------------|------------|
+| activity_logs | migrations |
+|------------|------------|
+// Relationships
+Ref: organisation_users.user_id > users.id
+Ref: organisation_users.organisation_id > organisations.id
+Ref: organisation_users.role_id > roles.id
+
+Ref: user_roles.user_id > users.id
+Ref: user_roles.role_id > roles.id
+
+Ref: users.id <> organisations.id [via: organisation_users]
+Ref: users.id <> roles.id [via: user_roles]
+Ref: users.id < blogs.user_id
+Ref: organisations.id < blogs.organisation_id
+Ref: users.id < email_templates.id
+Ref: organisations.id < email_templates.id
+Ref: "blogs"."content" < "organisations"."description"
+
+      '''
+}
+
+// Enum definations
+
+// user roles types
+// Define Enumerations
+Enum user_role_enum {
+    user
+    admin
+    super_admin
+}
+
+Enum payment_status_enum {
+    pending
+    completed
+    failed
+}
+
+Enum payment_gateway_enum {
+    stripe
+    flutterwave
+    lemonsqueezy
+}
+
+Enum user_status_enum {
+    active
+    inactive
+}
+
+Enum notification_type_enum {
+    email
+    push
+}
+
+// Table Definitions
+
+// Users & Authentication
+Table users {
+    id uuid [pk, note: 'Unique identifier for users']
+    first_name varchar(255) [not null]
+    last_name varchar(255) [not null]
+    username varchar(255) [not null, unique, note: 'Username for login']
+    email varchar(255) [not null, unique, note: 'Email address']
+    password varchar(255) [not null, note: 'Hashed password']
+    status user_status_enum [not null, default: 'active', note: 'User status']
+    language varchar(10)
+    region varchar(10)
+    magic_link_token varchar(255)
+    social_auth_provider varchar(255)
+    gdpr_cookies_consent boolean [note: 'GDPR consent status']
+    settings json [note: 'User-specific settings']
+    created_at timestamp [default: `now()`, note: 'Timestamp when user account was created']
+    updated_at timestamp [default: `now()`, note: 'Timestamp when user account was last updated']
+    last_login timestamp [note: 'Timestamp of last login']
+}
+
+
+Table sessions {
+    id int [pk, increment, note: 'Session identifier']
+    user_id uuid [ref: > users.id, note: 'Associated user']
+    token varchar(255) [not null, note: 'Session token']
+    expires_at timestamp [not null, note: 'Session expiration timestamp']
+
+    Note: 'Stores user session information'
+}
+
+Table password_resets {
+    id int [pk, increment, note: 'Password reset identifier']
+    user_id uuid [ref: > users.id, note: 'User requesting password reset']
+    token varchar(255) [not null, note: 'Reset token']
+    expires_at timestamp [not null, note: 'Token expiration timestamp']
+
+    Note: 'Stores password reset tokens'
+}
+
+// Roles & Permissions
+Table roles {
+    id uuid [pk, default: `uuid_generate_v4()`, note: 'Role identifier']
+    name varchar(255) [not null, unique, note: 'Role name']
+    description text [note: 'Role description']
+    Note: 'Stores role information'
+}
+
+Table user_roles {
+    user_id uuid [ref: > users.id, note: 'User assigned to role']
+    role_id uuid [ref: > roles.id, note: 'Assigned role']
+    created_at timestamp [default: `now()`, note: 'Assignment timestamp']
+    updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+    
+    indexes {
+        (user_id, role_id) [pk, note: 'Composite primary key for user-role relationship']
+    }
+
+    Note: 'Join table to represent the many-to-many relationship between users and roles'
+}
+
+// Organisations & Memberships
+Table organisations {
+    id uuid [pk, default: `uuid_generate_v4()`, note: 'Organisation identifier']
+    name varchar(255) [not null, note: 'Organisation name']
+    description text [note: 'Organisation description']
+    settings json [note: 'Organisation-specific settings']
+    created_at timestamp [default: `now()`, note: 'Timestamp when organisation was created']
+    updated_at timestamp [default: `now()`, note: 'Timestamp when organisation was last updated']
+    Note: 'Stores organisation information'
+}
+
+// Users organisations
+Table organisation_users {
+    user_id uuid [ref: > users.id, note: 'User associated with organisation']
+    organisation_id uuid [ref: > organisations.id, note: 'Organisation user belongs to']
+    role_id uuid [ref: > roles.id, note: 'Role within the organisation']
+    created_at timestamp [default: `now()`, note: 'Timestamp when user joined organisation']
+    updated_at timestamp [default: `now()`, note: 'Timestamp of last update']
+    
+    indexes {
+        (user_id, organisation_id) [pk, note: 'Composite primary key for user-organisation relationship']
+    }
+
+    Note: 'Join table to represent the many-to-many relationship between users and organisations, including roles'
+}
+
+
+// email or messages
+// Messaging & Communication
+Table emails {
+    id int [pk, increment, note: 'Email identifier']
+    sender_id uuid [ref: > users.id, note: 'Sender of the email']
+    recipient_email varchar(255) [not null, note: 'Recipient email address']
+    subject varchar(255)
+    body text
+    sent_timestamp timestamp [not null, note: 'Timestamp when email was sent']
+
+    Note: 'Stores information about sent emails'
+}
+
+Table email_templates {
+    id int [pk, increment, note: 'Email template identifier']
+    template_name varchar(255) [not null, unique, note: 'Name of the email template']
+    subject varchar(255)
+    body text
+    created_at timestamp [default: `now()`, note: 'Timestamp when template was created']
+    updated_at timestamp [default: `now()`, note: 'Timestamp of last update']
+
+    Note: 'Stores pre-designed email templates'
+}
+
+Table waitlist {
+    id int [pk, increment]
+    email varchar(255) [not null, unique]
+    signup_time timestamp [not null]
+
+    Note: 'Stores user information for waitlisted features'
+}
+
+Table invites {
+    id int [pk, increment]
+    sender_user_id uuid [ref: > users.id]
+    recipient_email varchar(255) [not null]
+    sent_timestamp timestamp [not null]
+    status varchar(255)
+
+    Note: 'Tracks user invitations'
+}
+
+// to fullfill requirements of randomly creating user data
+Table user_data {
+    id int [pk, increment]
+    user_id uuid [ref: > users.id]
+    data_type varchar(255) [not null]
+    value json
+    timestamp timestamp [not null]
+
+    Note: 'Stores user-specific data points'
+}
+
+Table widgets {
+    id int [pk, increment]
+    user_id uuid [ref: > users.id]
+    widget_type varchar(255) [not null]
+    data json
+
+    Note: 'Stores information about user-associated widgets'
+}
+// Notifications & Alerts
+Table notifications {
+    id int [pk, increment, note: 'Notification identifier']
+    user_id uuid [ref: > users.id, note: 'User receiving the notification']
+    notification_type notification_type_enum [not null, note: 'Type of notification (email, push, etc.)']
+    message text [not null, note: 'Notification message']
+    read boolean [default: false, note: 'Read status of the notification']
+    created_at timestamp [default: `now()`, note: 'Timestamp when notification was sent']
+
+    Note: 'Stores notification information for users'
+}
+
+Table push_notifications {
+    id int [pk, increment, note: 'Push notification identifier']
+    user_id uuid [ref: > users.id, note: 'User receiving the push notification']
+    content text [note: 'Push notification content']
+    sent_at timestamp [not null, note: 'Timestamp when push notification was sent']
+}
+
+Table activity_logs {
+    id int [pk, increment]
+    user_id uuid [ref: > users.id]
+    activity_type varchar(255) [not null]
+    activity_details json
+    timestamp timestamp [default: `now()`]
+
+    Note: '''Stores activity logs for users
+          Tracks user actions and app events'''
+}
+
+// Payments & Transactions
+Table payments {
+    id int [pk, increment, note: 'Payment identifier']
+    user_id uuid [ref: > users.id, note: 'User making the payment']
+    organisation_id uuid [ref: > organisations.id, note: 'Organisation receiving the payment']
+    amount decimal(10,2) [not null, note: 'Payment amount']
+    currency varchar(3) [not null, note: 'Payment currency code']
+    payment_gateway payment_gateway_enum [not null, note: 'Payment gateway used']
+    payment_status payment_status_enum [not null, default: 'pending', note: 'Payment status']
+    provider_payment_id varchar(255) [note: 'Provider-specific payment identifier']
+    created_at timestamp [default: `now()`, note: 'Timestamp when payment was initiated']
+    updated_at timestamp [default: `now()`, note: 'Timestamp of last update']
+    Note: 'Stores payment information'
+}
+Table blogs {
+    id int [pk, increment]
+    user_id uuid [ref: > users.id]
+    organisation_id uuid [ref: > organisations.id]
+    title varchar(255) [not null]
+    content text [not null]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp [default: `now()`]
+
+    Note: 'Stores blog posts'
+}
+
+Table charts {
+    id int [pk, increment]
+    user_id uuid [ref: > users.id]
+    chart_data json
+    created_at timestamp [default: `now()`]
+
+    Note: 'Stores chart data for users'
+}
+
+Table ai_integrations {
+    id int [pk, increment]
+    user_id uuid [ref: > users.id]
+    integration_type varchar(255)
+    details json
+    created_at timestamp [default: `now()`]
+
+    Note: 'Stores AI integration information'
+}
+
+Table migrations {
+    id int [pk, increment]
+    migration_name varchar(255) [not null]
+    run_at timestamp [not null]
+
+    Note: 'Stores migration information'
+}
+
+Table recommendations {
+    id int [pk, increment]
+    user_id uuid [ref: > users.id]
+    content text
+    created_at timestamp [default: `now()`]
+
+    Note: 'Stores recommendation information'
+}
+
+
+TableGroup Users {
+    users
+    sessions
+    password_resets
+    user_roles
+    user_data
+}
+
+TableGroup Organisations {
+    organisations
+    organisation_users
+}
+
+TableGroup Emails {
+    emails
+    email_templates
+}
+
+TableGroup Payments {
+    payments
+}
+
+TableGroup Invitations {
+    invites
+    waitlist
+}
+
+TableGroup Notifications {
+    notifications
+    push_notifications
+}
+
+TableGroup Content {
+    blogs
+    charts
+    ai_integrations
+    recommendations
+    widgets
+}
+
+TableGroup Logs {
+    activity_logs
+}
+
+TableGroup Migrations {
+    migrations
+}
+
+
